@@ -1,0 +1,14 @@
+FROM golang:1.18.6-alpine3.16 AS builder
+RUN apk --no-cache add git make bash
+RUN git config --global http.version HTTP/1.1
+ADD . /go/src/github/csi-resizer
+WORKDIR /go/src/github/csi-resizer
+RUN make
+
+FROM gcr.io/distroless/static:latest
+LABEL maintainers="Kubernetes Authors"
+LABEL description="CSI External Resizer"
+ARG binary=./bin/csi-resizer
+
+COPY --from=builder /go/src/github/csi-resizer/bin/csi-resizer csi-resizer
+ENTRYPOINT ["/csi-resizer"]
